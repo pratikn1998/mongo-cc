@@ -1,0 +1,20 @@
+[project]
+name = "code-comprehender"
+version = "0.1.0"
+description = "A tool for generating Java comments & generating architecture diagrams."
+requires-python = ">=3.8"
+
+dependencies = [
+    "google-cloud-secret-manager~=2.23.3",
+    "google-genai~=1.17.0",
+    "langchain-core~=0.3.63",
+    "langchain-google-genai~=2.1.5",
+    "ruff~=0.11.12",
+    "tree-sitter~=0.24.0",
+    "tree-sitter-java~=0.23.5",
+]
+
+[tool.ruff]
+line-length = 100
+exclude = ["venv", ".venv"]
+

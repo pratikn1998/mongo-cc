@@ -33,12 +33,12 @@ class ArchDiagramGenerator:
             system_instruction=prompts.ARCHITECTURE_DIAGRAM_GENERATOR_SYSTEM_INSTRUCTION
         )
         
-    def process(self):
+    async def process(self):
         """Main function to generate diagram."""
-        dot_graph = self._generate_dot_graph()
+        dot_graph = await self._generate_dot_graph()
         save_dot_graph(dot_graph, self.root_dir)
         
-    def _generate_dot_graph(self) -> str:
+    async def _generate_dot_graph(self) -> str:
         """Genereate DOT graph for GraphViz."""
         readme = load_project_readme(self.root_dir)
         
@@ -55,7 +55,7 @@ class ArchDiagramGenerator:
             {readme}
             </README>
             """
-        dot_graph = self.model.generate(prompt)
+        dot_graph = await self.model.generate(prompt)
         
         # Ensure string generated can be rendered by GraphViz.
         dot_graph = dot_graph.replace(

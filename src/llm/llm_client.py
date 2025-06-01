@@ -8,6 +8,9 @@ from google import genai
 from google.genai import types
 
 
+from src.common.retry import async_retry
+
+
 class LLMModel:
     """Abstraction from LLM client libraries.
     
@@ -42,7 +45,7 @@ class LLMModel:
         client = genai.Client(
             project=self.project_id,
             location=self.location,
-            vertexai=True
+            vertexai=True,
         )
         return client
     
@@ -58,7 +61,8 @@ class LLMModel:
             )
         )
 
-    def generate(self, prompt: str) -> str:
+    @async_retry(max_retries=3, base_delay=1.0, exceptions=(Exception,))
+    async def generate(self, prompt: str) -> str:
         """Send request to Gemini.
 
         Args:
@@ -67,7 +71,7 @@ class LLMModel:
         Returns: 
             Gemini response as text.
         """
-        response = self.client.models.generate_content(
+        response = await self.client.aio.models.generate_content(
             model=self.model_name,
             contents=prompt,
             config=self.generation_config,

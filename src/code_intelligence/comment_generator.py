@@ -4,6 +4,8 @@ import os
 import re
 from typing import Any, Dict, List
 
+import asyncio
+
 from src.common import types
 from src.llm import llm_client
 from src.llm import prompts 
@@ -48,7 +50,7 @@ class CommentGenerator:
             system_instruction=prompts.COMMENT_GENERATOR_SYSTEM_INSTRUCTION
         )
     
-    def process(self) -> None:
+    async def process(self) -> None:
         """Main function to generate comments for project.        
         
         Returns:
@@ -56,10 +58,10 @@ class CommentGenerator:
             `*_commented.java` file without modifying the original
             code. 
         """
-        self._generate_comments()
+        await self._generate_comments()
         self._write_comments_to_new_file()
 
-    def _generate_comments(self) -> None:
+    async def _generate_comments(self) -> None:
         """Generate comments for each class or method in a code base.
         
         Returns:
@@ -67,20 +69,17 @@ class CommentGenerator:
             `*_commented.java` file without modifying the original
             code. 
         """
-        for chunk in self.chunks:    
-            chunk_file_path = chunk.file_path
-            comment = self._generate_comment(chunk)
-            # Add comment generated with respect to what file
-            # and where it should be inserted. 
-            self.generated_comments.setdefault(chunk_file_path, [])
-            
-            self.generated_comments[chunk_file_path].append({
-                "comment": comment,
-                "line_number": chunk.start_line,
-                "indent_level": chunk.indent
-            })
-        
-    def _generate_comment(self, chunk) -> str:
+        generate_comment_tasks = [
+            self._generate_comment(chunk)
+            for chunk in self.chunks
+        ]
+        results = await asyncio.gather(*generate_comment_tasks)
+        for result in results:
+            file_path = result["file_path"]
+            comment_data = result["data"]
+            self.generated_comments.setdefault(file_path, []).append(comment_data)
+
+    async def _generate_comment(self, chunk) -> Dict[str, Any]:
         """Generate a code comment. 
         
         Inserts the relevant code snippets into prompt
@@ -101,7 +100,7 @@ class CommentGenerator:
             name=chunk.name,
             code=chunk.code
         )
-        comment_generated = self.model.generate(prompt)
+        comment_generated = await self.model.generate(prompt)
         
         # Post-process model generated comment to be a valid
         # Javadoc. 
@@ -117,7 +116,14 @@ class CommentGenerator:
             comment_generated, 
             flags=re.MULTILINE
         )
-        return comment_generated
+        return {
+            "file_path": chunk.file_path,
+            "data": {
+                "comment": comment_generated,
+                "line_number": chunk.start_line,
+                "indent_level": chunk.indent
+            }
+        }
 
     def _write_comments_to_new_file(self):
         """Write generated comments with original code to new file."""

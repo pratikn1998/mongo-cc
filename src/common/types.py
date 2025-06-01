@@ -1,11 +1,14 @@
 """Pydantic models."""
 
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, TypeAlias
 
 import langchain_pinecone
 from pydantic import BaseModel
 
+
+
+VectorStore: TypeAlias = langchain_pinecone.PineconeVectorStore
 
 class SymbolType(str, Enum):
     """Symbol / Chunk types."""
@@ -29,5 +32,3 @@ class JavaSymbol(BaseModel):
     methods: List[str] = []
     calls: List[str] = []
     summary: Optional[str] = None
-    
-VectorStore = langchain_pinecone.PineconeVectorStore

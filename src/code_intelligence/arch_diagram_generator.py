@@ -5,8 +5,12 @@ from typing import Any, List
 
 from graphviz import Source
 
+from src.common.logger import get_logger
 from src.llm import llm_client
 from src.llm import prompts
+
+
+logger = get_logger(__name__)
 
 
 class ArchDiagramGenerator:
@@ -33,12 +37,12 @@ class ArchDiagramGenerator:
             system_instruction=prompts.ARCHITECTURE_DIAGRAM_GENERATOR_SYSTEM_INSTRUCTION
         )
         
-    def process(self):
+    async def process(self):
         """Main function to generate diagram."""
-        dot_graph = self._generate_dot_graph()
+        dot_graph = await self._generate_dot_graph()
         save_dot_graph(dot_graph, self.root_dir)
         
-    def _generate_dot_graph(self) -> str:
+    async def _generate_dot_graph(self) -> str:
         """Genereate DOT graph for GraphViz."""
         readme = load_project_readme(self.root_dir)
         
@@ -55,7 +59,7 @@ class ArchDiagramGenerator:
             {readme}
             </README>
             """
-        dot_graph = self.model.generate(prompt)
+        dot_graph = await self.model.generate(prompt)
         
         # Ensure string generated can be rendered by GraphViz.
         dot_graph = dot_graph.replace(
@@ -104,7 +108,10 @@ def load_project_readme(root_dir: str) -> str | None:
 
 def save_dot_graph(dot_graph: str, root_dir: str) -> None:
     """Render a GraphViz DOT string to a PNG file."""
-    graph = Source(dot_graph)
+    try:
+        graph = Source(dot_graph)
+    except Exception as e:
+        logger.error(f"Error generating dot graph: {e}")
     output_path = os.path.join(root_dir, "architecture_diagram")
     graph.render(output_path, format="png", cleanup=True)
     

@@ -8,7 +8,7 @@ By adding both summary and code to the index, this can
 help the LLM answer user queries for their codebase. 
 """
 
-from concurrent.futures import as_completed, ThreadPoolExecutor
+import asyncio
 import os 
 from typing import List 
 
@@ -19,7 +19,7 @@ from src.llm import llm_client, prompts
 logger = get_logger(__name__)
 
 
-def generate_chunk_summaries(
+async def generate_chunk_summaries(
     model: llm_client.LLMModel, 
     chunk: types.JavaSymbol
 ):
@@ -30,14 +30,13 @@ def generate_chunk_summaries(
             file_path=chunk.file_path,
             code=chunk.code
         )
-        summary = model.generate(prompt)
+        summary = await model.generate(prompt)
         chunk.summary = summary
-    except Exception:
-        logger.error("Error generating summary for chunk.")
+    except Exception as e:
+        logger.error(f"Error generating summary for chunk: {str(e)}")
         
    
-    
-def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
+async def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
     """Generate summaries for all chunks.
     
     Args:
@@ -45,30 +44,38 @@ def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
             chunk that was pared. 
             
     Returns: 
-        None - udpates each symbol in place. 
+        None - updates each symbol in place. 
     """
-    project_id  = os.getenv("PROJECT_ID")
-    location = os.getenv("LOCATION")
-    model_name = os.getenv("MODEL_NAME")
-    
-    llm_model = llm_client.LLMModel(
-        project_id=project_id, 
-        location=location, 
-        model_name=model_name,
-        system_instruction=prompts.CHUNK_SUMMARY_SYSTEM_INSTRUCTION
-    )
-    
-    # Generate summaries for each chunk in paralle.
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [
-            executor.submit(
-                generate_chunk_summaries, 
-                llm_model, 
-                chunk
-            ) 
+    try:
+        project_id = os.getenv("PROJECT_ID")
+        location = os.getenv("LOCATION")
+        model_name = os.getenv("MODEL_NAME")
+        
+        if not all([project_id, location, model_name]):
+            logger.error("Missing required environment variables: PROJECT_ID, LOCATION, or MODEL_NAME")
+            return
+        
+        llm_model = llm_client.LLMModel(
+            project_id=project_id, 
+            location=location, 
+            model_name=model_name,
+            system_instruction=prompts.CHUNK_SUMMARY_SYSTEM_INSTRUCTION
+        )
+        
+        # Create tasks for each chunk
+        tasks = [
+            generate_chunk_summaries(llm_model, chunk)
             for chunk in chunks
         ]
-
-        for future in as_completed(futures):
-            _ = future.result()
+        
+        # Run all tasks concurrently
+        try:
+            await asyncio.gather(*tasks)
+        except asyncio.TimeoutError:
+            logger.error("Timeout while generating summaries")
+        except Exception as e:
+            logger.error(f"Error during summary generation: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to generate summaries for chunks: {str(e)}")
+        raise
     

@@ -5,8 +5,12 @@ from typing import Any, List
 
 from graphviz import Source
 
+from src.common.logger import get_logger
 from src.llm import llm_client
 from src.llm import prompts
+
+
+logger = get_logger(__name__)
 
 
 class ArchDiagramGenerator:
@@ -104,7 +108,10 @@ def load_project_readme(root_dir: str) -> str | None:
 
 def save_dot_graph(dot_graph: str, root_dir: str) -> None:
     """Render a GraphViz DOT string to a PNG file."""
-    graph = Source(dot_graph)
+    try:
+        graph = Source(dot_graph)
+    except Exception as e:
+        logger.error(f"Error generating dot graph: {e}")
     output_path = os.path.join(root_dir, "architecture_diagram")
     graph.render(output_path, format="png", cleanup=True)
     

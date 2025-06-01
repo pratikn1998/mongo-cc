@@ -5,10 +5,13 @@ description = "A tool for generating Java comments & generating architecture dia
 requires-python = ">=3.8"
 
 dependencies = [
-    "google-cloud-secret-manager~=2.23.3",
     "google-genai~=1.17.0",
+    "graphviz~=0.20.3",
     "langchain-core~=0.3.63",
     "langchain-google-genai~=2.1.5",
+    "langchain-pinecone~=0.2.6",
+    "pinecone>=6.0.0,<=6.0.2",
+    "python-dotenv~=1.1.0",
     "ruff~=0.11.12",
     "tree-sitter~=0.24.0",
     "tree-sitter-java~=0.23.5",

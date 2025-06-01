@@ -7,7 +7,6 @@ from typing import Any, Dict
 from google import genai
 from google.genai import types
 
-
 from src.common.retry import async_retry
 
 
@@ -36,7 +35,6 @@ class LLMModel:
         self.max_output_tokens = kwargs.get("max_output_tokens", 8192)
         self.thinking_budget = kwargs.get("thinking_budget", 0)
         
-        # Model client. 
         self.client = self._init_client()
         self.generation_config = self._load_generation_config()
         

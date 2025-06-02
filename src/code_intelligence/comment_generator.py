@@ -18,6 +18,15 @@ class CommentGenerator:
     use the current context as well as any related code context
     based on the parsed relationship and similar chunks 
     retrieved from the vector store. 
+    
+    Attributes:
+        vector_store: VectorStore instance for retrieving relevant code context.
+        chunks: List of JavaSymbols, where each element is a code
+            chunk that was pared. 
+        namespace: Namespace for the vector store of the stored code vectors.
+        model: LLMModel instance for generating comments.
+        generated_comments: Dictionary storing comments generated with 
+            respect to file + line number & indent of code comment was generated for.
     """
     def __init__(
         self, 
@@ -84,6 +93,14 @@ class CommentGenerator:
         
         Inserts the relevant code snippets into prompt
         to geenerate a comprehensive comment using Gemini.
+        
+        Args:
+            chunk: JavaSymbol instance for the code chunk to 
+                generate a comment for.
+            
+        Returns:
+            Dict[str, Any]: Dictionary containing the file path, comment, 
+                line number, and indent level.
         """
         query = chunk.code
         # TODO: Add metadata filters to improve search. 
@@ -128,7 +145,8 @@ class CommentGenerator:
     def _write_comments_to_new_file(self):
         """Write generated comments with original code to new file."""
         for file_path, file_comments in self.generated_comments.items():
-            formatted_lines = format_file_comments(file_path, file_comments)
+            formatted_lines = format_file_comments(
+                file_path, file_comments)
             write_lines_to_file(file_path, formatted_lines)
 
  
@@ -140,7 +158,10 @@ def format_file_comments(file_path: str, commments: List[Dict[str, Any]]):
     # Sort generated comments with respect to line number of code
     # block they were generated for. 
     comments_sorted = sorted(
-        commments, key=lambda x: x["line_number"], reverse=True)
+        commments, 
+        key=lambda x: x["line_number"], 
+        reverse=True
+    )
     
     # Insert each comment block at the specified line number.
     # Comments are inserted in reverse line order to prevent line number shifts 
@@ -156,6 +177,11 @@ def format_file_comments(file_path: str, commments: List[Dict[str, Any]]):
 def format_comment_block(comment: str, indent_num: int) -> List[str]:
     """Adjust indentation level for a preformatted JavaDoc comment block.
     
+    Args:
+        comment: The LLM generated comment.
+        indent_num: Integer representing the number of spaces 
+            to indent the comment.
+        
     Returns:
         List of indented lines for each comment line. 
     """
@@ -166,7 +192,12 @@ def format_comment_block(comment: str, indent_num: int) -> List[str]:
 
 
 def write_lines_to_file(file_path: str, lines: List[str]):
-    """Write lines to new file."""
+    """Write lines to new file.
+    
+    Args:
+        file_path: File path of original java file.
+        lines: Updated file lines to write.
+    """
     rel_path = os.path.relpath(file_path)
     base, ext = os.path.splitext(rel_path)
     output_file_path = os.path.normpath(

@@ -13,8 +13,18 @@ from src.common.retry import async_retry
 class LLMModel:
     """Abstraction from LLM client libraries.
     
-    Attributes: 
-        model_name (str): Model name.        
+    Args: 
+        model_name (str): Model name.
+        project_id (str): GCP Project ID.
+        location (str): Location to init Gemini client.
+        system_instruction (str): System instruction for the model.
+
+    Keyword Args:
+        - response_mime_type (str): Expected response format.
+        - temperature (float): Sampling temperature for generation.
+        - top_p (float): Top-p.
+        - max_output_tokens (int): Maximum number of tokens to generate.
+        - thinking_budget (int): Optional quota or token budget to control reasoning steps.
     """
     def __init__(
         self, 

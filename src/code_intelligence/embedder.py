@@ -11,7 +11,15 @@ from src.common import types
 
 
 def create_symbol_document(chunk: types.JavaSymbol):
-    """Create a document to embed and store in a Vector store. """
+    """Create a document to embed and store in a Vector store. 
+    
+    Args:
+        chunk: JavaSymbol / chunk instance.
+        
+    Returns:
+        Langchain Document instance for the chunk with
+            respective metadata. 
+    """
     page_content = chunk.code + "\n\n" + (chunk.summary or "")
     
     # NOTE: I added this metadata if we wanted to turn this workflow
@@ -38,9 +46,14 @@ def load_or_create_vector_store(
     namespace: str
 ) -> PineconeVectorStore:
     """Create a vector store from chunks.
-    
+
+    Args:
+        chunks: List of JavaSymbols, where each element is a code
+            chunk that was parsed. 
+        namespace: Respective namespace of the vectors in the index.
+        
     Returns:
-        Pinecone Vector Store. 
+        PineconeVectorStore instance. 
     """
     index_name = os.getenv("INDEX_NAME", "code-comprehender")
     

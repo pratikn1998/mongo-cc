@@ -14,7 +14,14 @@ logger = get_logger(__name__)
 
 
 class ArchDiagramGenerator:
-    """Generates architecture diagram for project."""
+    """Generates architecture diagram for project.
+    
+    Attributes:
+        root_dir: Root directory of the code project.
+        chunks: List of JavaSymbols, where each element is a code
+            chunk that was pared. 
+        model: LLMModel instance for generating the diagram.
+    """
     def __init__(self, root_dir: str, chunks: List[Any]):
         self.root_dir = root_dir
         self.chunks = chunks
@@ -92,7 +99,14 @@ class ArchDiagramGenerator:
         
         
 def load_project_readme(root_dir: str) -> str | None:
-    """Load Project's main README if exists."""
+    """Load Project's main README if exists.
+    
+    Args:
+        root_dir: Root directory of the code project.
+        
+    Returns:
+        str | None: The README content if found, otherwise None.
+    """
     try:
         for filename in os.listdir(root_dir):
             if filename.upper().startswith("README"):
@@ -107,7 +121,12 @@ def load_project_readme(root_dir: str) -> str | None:
 
 
 def save_dot_graph(dot_graph: str, root_dir: str) -> None:
-    """Render a GraphViz DOT string to a PNG file."""
+    """Render a GraphViz DOT string to a PNG file.
+    
+    Args:
+        dot_graph: DOT graph string.
+        root_dir: Root directory of the code project.
+    """
     try:
         graph = Source(dot_graph)
     except Exception as e:

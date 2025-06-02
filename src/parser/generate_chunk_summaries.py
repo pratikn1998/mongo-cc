@@ -8,9 +8,10 @@ By adding both summary and code to the index, this can
 help the LLM answer user queries for their codebase. 
 """
 
-import asyncio
 import os 
 from typing import List 
+
+import asyncio
 
 from src.common import types
 from src.common.logger import get_logger
@@ -19,21 +20,32 @@ from src.llm import llm_client, prompts
 logger = get_logger(__name__)
 
 
+MAX_CONCURRENT_REQUESTS = 50
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+ 
 async def generate_chunk_summaries(
     model: llm_client.LLMModel, 
     chunk: types.JavaSymbol
 ):
     """Generate a summary for a chunk."""
+    prompt = prompts.CHUNK_SUMMARY_PROMPT.format(
+        name=chunk.name,
+        file_path=chunk.file_path,
+        code=chunk.code
+    )
     try:
-        prompt = prompts.CHUNK_SUMMARY_PROMPT.format(
-            name=chunk.name,
-            file_path=chunk.file_path,
-            code=chunk.code
-        )
-        summary = await model.generate(prompt)
-        chunk.summary = summary
+        async with semaphore:
+            summary = await model.generate(prompt)
+            chunk.summary = summary
     except Exception as e:
-        logger.error(f"Error generating summary for chunk: {str(e)}")
+        # TODO: clean up. 
+        if "429" in str(e):
+            logger.debug(
+                "Gemini Quota Error after multiple attempts")
+        else:
+            logger.error(
+                f"Error calling gemini to generate summary for chunk: {str(e)}")
         
    
 async def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
@@ -62,13 +74,12 @@ async def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
             system_instruction=prompts.CHUNK_SUMMARY_SYSTEM_INSTRUCTION
         )
         
-        # Create tasks for each chunk
+        # Create tasks for each chunk.
         tasks = [
             generate_chunk_summaries(llm_model, chunk)
             for chunk in chunks
         ]
         
-        # Run all tasks concurrently
         try:
             await asyncio.gather(*tasks)
         except asyncio.TimeoutError:

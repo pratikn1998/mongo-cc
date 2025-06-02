@@ -102,7 +102,7 @@ def load_project_readme(root_dir: str) -> str | None:
                         return f.read()
         return None
     except Exception as e:
-        print(f"Error getting README: {e}")
+        logger.error(f"Error getting README: {e}")
         return None
 
 

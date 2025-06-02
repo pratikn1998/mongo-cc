@@ -4,10 +4,10 @@ This file deinfes a class for interacting with a LLM (specificall Gemini).
 
 from typing import Any, Dict
 
+from tenacity import retry, stop_after_delay, wait_random_exponential
+
 from google import genai
 from google.genai import types
-
-from src.common.retry import async_retry
 
 
 class LLMModel:
@@ -59,7 +59,11 @@ class LLMModel:
             )
         )
 
-    @async_retry(max_retries=3, base_delay=1.0, exceptions=(Exception,))
+    @retry(
+        stop=stop_after_delay(16),
+        wait=wait_random_exponential(multiplier=1, max=16),
+        reraise=True
+    )
     async def generate(self, prompt: str) -> str:
         """Send request to Gemini.
 

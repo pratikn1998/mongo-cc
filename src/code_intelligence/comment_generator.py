@@ -79,9 +79,9 @@ class CommentGenerator:
         ]
         results = await asyncio.gather(*generate_comment_tasks)
         for result in results:
-            file_path = result["file_path"]
-            comment_data = result["data"]
-            self.generated_comments.setdefault(file_path, []).append(comment_data)
+            if result:
+                file_path = result["file_path"]
+                self.generated_comments.setdefault(file_path, []).append(result["data"])
 
     async def _generate_comment(self, chunk) -> Dict[str, Any]:
         """Generate a code comment. 
@@ -89,45 +89,54 @@ class CommentGenerator:
         Inserts the relevant code snippets into prompt
         to geenerate a comprehensive comment using Gemini.
         """
-        query = chunk.code
-        # TODO: Add metadata filters to improve search. 
-        filter = None
-    
-        relevant_docs = self.vector_store.similarity_search(
-            query=query,
-            filter=filter,
-            namespace=self.namespace
-        )
-        prompt = prompts.COMMENT_GENERATOR_PROMPT_TEMPLATE.format(
-            similar_context=relevant_docs,
-            type=chunk.type,
-            name=chunk.name,
-            code=chunk.code
-        )
-        comment_generated = await self.model.generate(prompt)
+        try:
+            query = chunk.code
+            # TODO: Add metadata filters to improve search. 
+            filter = None
         
-        # Post-process model generated comment to be a valid
-        # Javadoc. 
-        # TODO: Clean up. 
-        comment_generated = comment_generated.replace(
-            "```", ""
-        ).replace(
-            "```java", ""
-        )
-        comment_generated = re.sub(
-            r'^\s*java\s*\n?', 
-            '', 
-            comment_generated, 
-            flags=re.MULTILINE
-        )
-        return {
-            "file_path": chunk.file_path,
-            "data": {
-                "comment": comment_generated,
-                "line_number": chunk.start_line,
-                "indent_level": chunk.indent
+            relevant_docs = self.vector_store.similarity_search(
+                query=query,
+                filter=filter,
+                namespace=self.namespace
+            )
+            
+            prompt = prompts.COMMENT_GENERATOR_PROMPT_TEMPLATE.format(
+                similar_context=relevant_docs,
+                type=chunk.type,
+                name=chunk.name,
+                code=chunk.code
+            )
+            comment_generated = await self.model.generate(prompt)
+            
+            # Post-process model generated comment to be a valid
+            # Javadoc. 
+            # TODO: Clean up. 
+            comment_generated = comment_generated.replace(
+                "```", ""
+            ).replace(
+                "```java", ""
+            )
+            comment_generated = re.sub(
+                r'^\s*java\s*\n?', 
+                '', 
+                comment_generated, 
+                flags=re.MULTILINE
+            )
+            return {
+                "file_path": chunk.file_path,
+                "data": {
+                    "comment": comment_generated,
+                    "line_number": chunk.start_line,
+                    "indent_level": chunk.indent
+                }
             }
-        }
+        except Exception as e:
+            # TODO: Cleanup. 
+            if "'code': 429" in str(e):
+                logger.warning("Gemini quota reached generating comment for current chunk.")
+                return None
+            logger.error(
+                f"Error generating comment for current chunk: {e}")
 
     def _write_comments_to_new_file(self):
         """Write generated comments with original code to new file."""

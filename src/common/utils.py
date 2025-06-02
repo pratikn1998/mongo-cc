@@ -24,4 +24,6 @@ def remove_code_comprehender_outputs(root_dir: str) -> None:
             if filename.endswith("_commented.java") or filename.endswith("architecture_diagram.png"):
                 file_path = os.path.join(dirpath, filename)
                 os.remove(file_path)
+
+                
                     

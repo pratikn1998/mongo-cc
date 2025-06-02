@@ -8,9 +8,11 @@ By adding both summary and code to the index, this can
 help the LLM answer user queries for their codebase. 
 """
 
-import asyncio
+from concurrent.futures import as_completed, ThreadPoolExecutor
 import os 
 from typing import List 
+
+import asyncio
 
 from src.common import types
 from src.common.logger import get_logger
@@ -33,7 +35,13 @@ async def generate_chunk_summaries(
         summary = await model.generate(prompt)
         chunk.summary = summary
     except Exception as e:
-        logger.error(f"Error generating summary for chunk: {str(e)}")
+        # TODO: clean up. 
+        if "429" in str(e):
+            logger.debug(
+                "Gemini Quota Error after multiple attempts")
+        else:
+            logger.error(
+                f"Error calling gemini to generate summary for chunk: {str(e)}")
         
    
 async def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:

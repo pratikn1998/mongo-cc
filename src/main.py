@@ -68,18 +68,18 @@ async def main():
     # Parse code files in project into chunks. 
     parser = JavaCodeParser(root_dir=args.input_dir)
     chunks = parser.parse_project()
-    
+
     # Generate summaries with an LLM for each chunk. 
     await generate_all_chunk_summaries(chunks=chunks)
 
-    try:
-        await arch_diagram_generator.ArchDiagramGenerator(
-            root_dir=args.input_dir,
-            chunks=chunks
-        ).process()
-        logger.info("Successfully generated architecture diagram.")
-    except Exception as e:
-        logger.error(f"Failed to generate architecture diagram: {str(e)}")
+    # try:
+    #     await arch_diagram_generator.ArchDiagramGenerator(
+    #         root_dir=args.input_dir,
+    #         chunks=chunks
+    #     ).process()
+    #     logger.info("Successfully generated architecture diagram.")
+    # except Exception as e:
+    #     logger.error(f"Failed to generate architecture diagram: {str(e)}")
     
     # Create vector store. 
     vector_store = embedder.load_or_create_vector_store(
@@ -87,15 +87,18 @@ async def main():
         namespace=args.namespace
     )
     
-    try:
-        await comment_generator.CommentGenerator(
-            vector_store=vector_store,
-            namespace=args.namespace,
-            chunks=chunks
-        ).process()
-        logger.info("Successfully generated code comments")
-    except Exception as e:
-        logger.error(f"Failed to generate code comments: {str(e)}")
+    # try:
+    #     start_time = time.time()
+    #     await comment_generator.CommentGenerator(
+    #         vector_store=vector_store,
+    #         namespace=args.namespace,
+    #         chunks=chunks
+    #     ).process()
+    #     end_time = time.time()
+    #     print(f"Time taken to generate code comments: {end_time - start_time} seconds")
+    #     logger.info("Successfully generated code comments")
+    # except Exception as e:
+    #     logger.error(f"Failed to generate code comments: {str(e)}")
     
     
 if __name__ == "__main__":

@@ -79,12 +79,17 @@ def load_or_create_vector_store(
     if namespace not in existing_namespaces:
         # Create a langchain document for each chunk. 
         documents = [create_symbol_document(chunk) for chunk in chunks]
-        vector_store = PineconeVectorStore.from_documents(
-            documents=documents,
-            index_name=index_name,
-            embedding=embeddings,
-            namespace=namespace
-        )
+        BATCH_SIZE = 8
+        for i in range(0, len(documents), BATCH_SIZE):
+            # NOTE: Due to the Gemini embeddings batch embeddings quota,
+            #  we need to batch them. 
+            batch_docs = documents[i:i+BATCH_SIZE]
+            vector_store = PineconeVectorStore.from_documents(
+                documents=batch_docs,
+                index_name=index_name,
+                embedding=embeddings,
+                namespace=namespace
+            )
     else:
         vector_store = PineconeVectorStore(
             index_name="code-comprehender",

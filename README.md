@@ -16,6 +16,22 @@ Code Comprehender is a Python-based tool that helps developers understand and do
 - **Architecture Visualization**: Generates architecture diagrams using Graphviz
 - **Java Code Analysis**: Built-in Java parser using tree-sitter for accurate code analysis
 
+## Project Structure
+
+```
+.
+├── src/
+│   ├── code_intelligence/  # Code analysis and intelligence features
+│   ├── common/            # Shared utilities and helpers
+│   ├── llm/              # LLM integration components
+│   ├── parser/           # Java code parsing functionality
+│   └── main.py           # Main application entry point
+├── sample_repos/         # Sample repositories for testing
+├── pyproject.toml        # Project configuration and dependencies
+├── Makefile             # Development automation commands
+└── uv.lock              # Locked dependencies
+```
+
 ## Workflow Architecture
 
 1.
@@ -25,6 +41,8 @@ Code Comprehender is a Python-based tool that helps developers understand and do
 - Python 3.8 or higher
 - Make (for using Makefile commands)
 - UV package manager
+- A valid **Gemini API key**
+- A valid **Pinecone API key**
 
 ## Installation
 
@@ -47,20 +65,16 @@ This will:
 - Install all required dependencies
 - Set up the project for development
 
-## Project Structure
+## Setup
 
+1. Activate the virtual environment: 
+```bash
+source .venv/bin/activate
 ```
-.
-├── src/
-│   ├── code_intelligence/  # Code analysis and intelligence features
-│   ├── common/            # Shared utilities and helpers
-│   ├── llm/              # LLM integration components
-│   ├── parser/           # Java code parsing functionality
-│   └── main.py           # Main application entry point
-├── sample_repos/         # Sample repositories for testing
-├── pyproject.toml        # Project configuration and dependencies
-├── Makefile             # Development automation commands
-└── uv.lock              # Locked dependencies
+
+2. Copy the example enviroment file and respective variables: 
+```bash
+cp .env.example .env
 ```
 
 ## Usage

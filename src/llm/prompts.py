@@ -1,6 +1,5 @@
 """Prompts."""
 
-
 # Prompts to summarize chunks before creating vector store. 
 CHUNK_SUMMARY_SYSTEM_INSTRUCTION = """
 You are a software documentation expert. Given a Java method or class and its metadata, write a clear, concise, and relationship-aware summary.

@@ -1,6 +1,6 @@
 # Code Comprehender
 
-A powerful tool for generating Java code documentation and architecture diagrams.
+A workflow for generating Java code documentation and architecture diagrams.
 
 ## Overview
 

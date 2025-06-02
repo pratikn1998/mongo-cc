@@ -7,7 +7,6 @@ import langchain_pinecone
 from pydantic import BaseModel
 
 
-
 VectorStore: TypeAlias = langchain_pinecone.PineconeVectorStore
 
 class SymbolType(str, Enum):

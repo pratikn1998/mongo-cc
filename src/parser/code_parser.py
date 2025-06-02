@@ -14,17 +14,12 @@ class JavaCodeParser:
     def __init__(self, root_dir: str):
         self.root_dir = root_dir
         
-        self.parser = self._load_java_parser()
+        self.parser = load_java_parser()
         
         # Stores symbols or nodes parsed from each Java
         # file with relevant information such as node type,
         # name, etc. 
         self.chunks = []
-        
-    def _load_java_parser(self):
-        """Loads java parser."""
-        language = Language(tree_sitter_java.language())
-        return Parser(language)
         
     def parse_project(self) -> None:
         """Main funtion to parse a Java project.
@@ -215,3 +210,9 @@ class JavaCodeParser:
         # Recurse through. 
         _collect_calls(node)
         return calls
+
+
+def load_java_parser():
+    """Loads java parser."""
+    language = Language(tree_sitter_java.language())
+    return Parser(language)

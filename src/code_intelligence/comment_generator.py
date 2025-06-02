@@ -7,8 +7,12 @@ from typing import Any, Dict, List
 import asyncio
 
 from src.common import types
+from src.common.logger import get_logger
 from src.llm import llm_client
-from src.llm import prompts 
+from src.llm import prompts
+from src.parser import code_parser
+
+logger = get_logger(__name__)
 
 
 class CommentGenerator:
@@ -129,7 +133,11 @@ class CommentGenerator:
         """Write generated comments with original code to new file."""
         for file_path, file_comments in self.generated_comments.items():
             formatted_lines = format_file_comments(file_path, file_comments)
-            write_lines_to_file(file_path, formatted_lines)
+            # Ensure new java file still has structural correctness. 
+            if validate_new_file(formatted_lines):
+                write_lines_to_file(file_path, formatted_lines)
+            else:
+                logger.error(f"Updated file is not valid Java code.")
 
  
 def format_file_comments(file_path: str, commments: List[Dict[str, Any]]):
@@ -176,3 +184,14 @@ def write_lines_to_file(file_path: str, lines: List[str]):
     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
     with open(output_file_path, "w") as f:
         f.writelines(lines)
+
+
+def validate_new_file(file_lines: List[str]) -> bool:
+    """Validate a commented file is valid Java code."""
+    file_content = "\n".join(file_lines)
+    parser = code_parser.load_java_parser()
+    tree = parser.parse(bytes(file_content, "utf8"))
+    root_node = tree.root_node
+    if root_node.has_error:
+        return False
+    return True

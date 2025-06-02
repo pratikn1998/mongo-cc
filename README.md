@@ -19,17 +19,16 @@ Code Comprehender is a Python-based tool that helps developers understand and do
 ## Project Structure
 
 ```
-.
 ├── src/
 │   ├── code_intelligence/  # Code analysis and intelligence features
-│   ├── common/            # Shared utilities and helpers
-│   ├── llm/              # LLM integration components
-│   ├── parser/           # Java code parsing functionality
-│   └── main.py           # Main application entry point
-├── sample_repos/         # Sample repositories for testing
-├── pyproject.toml        # Project configuration and dependencies
-├── Makefile             # Development automation commands
-└── uv.lock              # Locked dependencies
+│   ├── common/             # Shared utilities and helpers
+│   ├── llm/                # LLM integration components
+│   ├── parser/             # Java code parsing functionality
+│   └── main.py             # Main application entry point
+├── .env.example            # Example environment variables file
+├── pyproject.toml          # Project configuration and dependencies
+├── Makefile                # Development automation commands
+└── uv.lock                 # Locked dependencies
 ```
 
 ## Workflow Architecture

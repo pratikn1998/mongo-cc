@@ -137,7 +137,7 @@ class CommentGenerator:
             if validate_new_file(formatted_lines):
                 write_lines_to_file(file_path, formatted_lines)
             else:
-                logger.error(f"Updated file is not valid Java code.")
+                logger.error("Updated file is not valid Java code.")
 
  
 def format_file_comments(file_path: str, commments: List[Dict[str, Any]]):

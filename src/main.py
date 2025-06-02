@@ -63,43 +63,45 @@ async def main():
         args.namespace = utils.generate_namespace(
             args.input_dir)
         
-    logger.info("Successfully parsed args. Starting code comprehender.")
+    logger.info("Starting code comprehender...")
         
     # Parse code files in project into chunks. 
     parser = JavaCodeParser(root_dir=args.input_dir)
     chunks = parser.parse_project()
+    
 
-    # Generate summaries with an LLM for each chunk. 
-    await generate_all_chunk_summaries(chunks=chunks)
-
-    # try:
-    #     await arch_diagram_generator.ArchDiagramGenerator(
-    #         root_dir=args.input_dir,
-    #         chunks=chunks
-    #     ).process()
-    #     logger.info("Successfully generated architecture diagram.")
-    # except Exception as e:
-    #     logger.error(f"Failed to generate architecture diagram: {str(e)}")
+    try:
+        # Generate summaries with an LLM for each chunk. 
+        # NOTE: These are used for the architecture diagram task, 
+        # but could also be leverage for better retrieval for an 
+        # agentic system. 
+        logger.info("Generating summaries for each code chunk...")
+        await generate_all_chunk_summaries(chunks=chunks)    
+        await arch_diagram_generator.ArchDiagramGenerator(
+            root_dir=args.input_dir,
+            chunks=chunks
+        ).process()
+        logger.info("Successfully generated architecture diagram.")
+    except Exception as e:
+        logger.error(f"Failed to generate architecture diagram: {str(e)}")
     
     # Create vector store. 
+    logger.info("Retrieving Vector Store...")
     vector_store = embedder.load_or_create_vector_store(
         chunks=chunks, 
         namespace=args.namespace
     )
     
-    # try:
-    #     start_time = time.time()
-    #     await comment_generator.CommentGenerator(
-    #         vector_store=vector_store,
-    #         namespace=args.namespace,
-    #         chunks=chunks
-    #     ).process()
-    #     end_time = time.time()
-    #     print(f"Time taken to generate code comments: {end_time - start_time} seconds")
-    #     logger.info("Successfully generated code comments")
-    # except Exception as e:
-    #     logger.error(f"Failed to generate code comments: {str(e)}")
-    
+    try:
+        logger.info("Generating comments...")
+        await comment_generator.CommentGenerator(
+            vector_store=vector_store,
+            namespace=args.namespace,
+            chunks=chunks
+        ).process()
+        logger.info("Successfully generated code comments")
+    except Exception as e:
+        logger.error(f"Failed to generate code comments: {str(e)}")
     
 if __name__ == "__main__":
     asyncio.run(main())

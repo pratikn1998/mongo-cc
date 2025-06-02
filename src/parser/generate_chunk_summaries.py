@@ -8,7 +8,6 @@ By adding both summary and code to the index, this can
 help the LLM answer user queries for their codebase. 
 """
 
-from concurrent.futures import as_completed, ThreadPoolExecutor
 import os 
 from typing import List 
 
@@ -21,19 +20,24 @@ from src.llm import llm_client, prompts
 logger = get_logger(__name__)
 
 
+MAX_CONCURRENT_REQUESTS = 50
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+
+ 
 async def generate_chunk_summaries(
     model: llm_client.LLMModel, 
     chunk: types.JavaSymbol
 ):
     """Generate a summary for a chunk."""
+    prompt = prompts.CHUNK_SUMMARY_PROMPT.format(
+        name=chunk.name,
+        file_path=chunk.file_path,
+        code=chunk.code
+    )
     try:
-        prompt = prompts.CHUNK_SUMMARY_PROMPT.format(
-            name=chunk.name,
-            file_path=chunk.file_path,
-            code=chunk.code
-        )
-        summary = await model.generate(prompt)
-        chunk.summary = summary
+        async with semaphore:
+            summary = await model.generate(prompt)
+            chunk.summary = summary
     except Exception as e:
         # TODO: clean up. 
         if "429" in str(e):
@@ -70,13 +74,12 @@ async def generate_all_chunk_summaries(chunks: List[types.JavaSymbol]) -> None:
             system_instruction=prompts.CHUNK_SUMMARY_SYSTEM_INSTRUCTION
         )
         
-        # Create tasks for each chunk
+        # Create tasks for each chunk.
         tasks = [
             generate_chunk_summaries(llm_model, chunk)
             for chunk in chunks
         ]
         
-        # Run all tasks concurrently
         try:
             await asyncio.gather(*tasks)
         except asyncio.TimeoutError:

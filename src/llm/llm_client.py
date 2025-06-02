@@ -9,8 +9,6 @@ from tenacity import retry, stop_after_delay, wait_random_exponential
 from google import genai
 from google.genai import types
 
-# from src.common.retry import async_retry
-
 
 class LLMModel:
     """Abstraction from LLM client libraries.
@@ -63,7 +61,7 @@ class LLMModel:
 
     @retry(
         stop=stop_after_delay(16),
-        wait=wait_random_exponential(multiplier=1, max=8),
+        wait=wait_random_exponential(multiplier=1, max=16),
         reraise=True
     )
     async def generate(self, prompt: str) -> str:

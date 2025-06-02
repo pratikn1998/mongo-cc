@@ -90,6 +90,14 @@ With explicit namespace for Vector Store reference:
 python -m src.main --input_dir=./test-project --namespace=test-namespace
 ```
 
+## Testing
+As of now, unit tests are written only for the Java parser module, which is responsible for parsing code into structured chunks ([`JavaSymbol`](src/common/types.py) objects).
+
+
+```bash
+pytest -v
+```
+
 ### Available Make Commands
 
 - `make venv`: Creates a virtual environment

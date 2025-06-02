@@ -17,7 +17,24 @@ class SymbolType(str, Enum):
     
     
 class JavaSymbol(BaseModel):
-    """Pydantic model for a `Node` chunk."""
+    """Pydantic model for a `Node` chunk.
+
+    Attributes:
+        chunk_id: Unique identifier for the chunk.
+        name: Name of the chunk.
+        type: Type of the chunk.
+        file_path: File path of the chunk.
+        code: Code of the chunk.
+        start_line: Starting line number of the chunk.
+        end_line: Ending line number of the chunk.
+        indent: Indent level of the chunk.
+        parent_class: Parent class of the chunk.
+        extends: List of classes extended by the chunk.
+        implements: List of interfaces implemented by the chunk.
+        methods: List of methods in the chunk.
+        calls: List of calls made by the chunk.
+        summary: LLM generated summary of the chunk.
+    """
     chunk_id: str
     name: str
     type: SymbolType           

@@ -7,6 +7,9 @@ from tree_sitter import Language, Node, Parser
 import tree_sitter_java as tree_sitter_java
 
 from src.common import types
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class JavaCodeParser:
@@ -38,6 +41,9 @@ class JavaCodeParser:
         
     def _get_java_files(self) -> List[str]:
         """Get file paths of all java files in directory."""
+        if not os.path.exists(self.root_dir):
+            raise FileNotFoundError(
+                f"Directory '{self.root_dir}' does not exist.")
         return [
             os.path.join(root, file)
             for root, _, files in os.walk(self.root_dir)
@@ -183,8 +189,12 @@ class JavaCodeParser:
             # If a class implements an interface.
             elif child.type == "super_interfaces":
                 for grandchild in child.children:
-                    if grandchild.type == "type_identifier":
-                        implements.append(code[grandchild.start_byte:grandchild.end_byte].strip())
+                    if grandchild.type == "type_list":
+                        interfaces = [
+                            interface.strip() 
+                            for interface in code[grandchild.start_byte:grandchild.end_byte].strip().split(",")
+                        ]
+                        implements.extend(interfaces)
 
         return extends, implements
     
